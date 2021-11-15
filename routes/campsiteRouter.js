@@ -24,7 +24,7 @@ campsiteRouter.route('/')
     Campsite.create(req.body)
     .then (campsite => {
         //campsite contains information about the campsite the client posted//
-        console.log('Campsite Created', campsite)
+        console.log('Campsite Created', campsite);
         res.statusCode = 200;
         res.setHeader('Content-Type', 'application/json');
         res.json(campsite);
