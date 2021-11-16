@@ -3,6 +3,8 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+const session = require('express-session');
+const FileStore = require('session-file-store')(session);
 
 //IMPORTING ROUTERS//
 var indexRouter = require('./routes/index');
@@ -39,12 +41,26 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 //Gives cookieParser a secret key//
-app.use(cookieParser('12345-67890-09876-54321'));
+// app.use(cookieParser('12345-67890-09876-54321'));
+
+app.use(session({
+  name: 'session-id',
+  //Secret key//
+  secret: '12345-67890-09876-54321',
+  //'saveUninitialized: false' --> When a new session is created and no updates are made to it, then at the end of the request it won't get saved. Avoids making empty sessions and no cookie will be sent to the client.//
+  saveUninitialized: false,
+  //'resave: false' --> Once the session has been created and updated and saved, it will continue to be resaved whenever a request is made for that session even if that request didn't make any updates. Helps keep session marked as active so it doesn't get deleted while the user is still making requests.//
+  resave: false,
+  //Creates a new FileStore as an object that saves session information to the server's hard disk instead of the running application's memory//
+  store: new FileStore()
+}));
 
 //Set up authentication before accessing server//
 function auth(req, res, next){
-  //if cookie not properly signed...//
-  if(!req.signedCookies.user) {
+
+  console.log(req.session);
+  //if no session...//
+  if(!req.session.user) {
       const authHeader = req.headers.authorization;
       
       //if authorization header is null, send back error.//
@@ -64,10 +80,7 @@ function auth(req, res, next){
       //If admin and password are 'admin' and 'password', then grant access to server.//
       //Otherwise, request authentication again with 401 error.//
       if (user === 'admin' && pass === 'password') {
-          //Signs cookie.//
-          // {signed: true} tells Express to use secret key from cookieParser to create a signed cookie //
-          //sets cookie name to 'user'//
-          res.cookie('user','admin', {signed:true});
+          req.session.user = 'admin';
           return next(); //authorized
       } else {
           const err = new Error('You are not authenticated.');
@@ -77,7 +90,7 @@ function auth(req, res, next){
       }
   } else {
       //if cookie is signed, checks to see if value is 'admin'//
-      if (req.signedCookies.user === 'admin') {
+      if (req.session.user === 'admin') {
         //if true, passes client onto the next middleware function//
         return next();
       } else {
