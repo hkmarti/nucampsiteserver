@@ -5,6 +5,8 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 const session = require('express-session');
 const FileStore = require('session-file-store')(session);
+const passport = require('passport');
+const authenticate = require('./authenticate');
 
 //IMPORTING ROUTERS//
 var indexRouter = require('./routes/index');
@@ -56,33 +58,29 @@ app.use(session({
   store: new FileStore()
 }));
 
+//Two middleware functions provided by Passport to check incoming requests to see if there's an existing session for that client. If so, the session data for that client is loaded into the request as rec.user//
+app.use(passport.initialize());
+app.use(passport.session());
+
 //Client has acesses to log in before authentication//
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 
 
 //Set up authentication before accessing server//
-function auth(req, res, next){
+function auth(req, res, next) {
+  console.log(req.user);
 
-  console.log(req.session);
-  //if no session, then ask for login.//
-  if(!req.session.user) {
-    const err = new Error('You are not authenticated.');
-    err.status = 401;
-    return next(err);
+  if (!req.user) {
+    //If no user, then no session. Return error//
+      const err = new Error('You are not authenticated!');                    
+      err.status = 401;
+      return next(err);
   } else {
-      //if cookie is signed, checks to see if value is 'admin'//
-      if (req.session.user === 'authenticated') {
-        //if true, passes client onto the next middleware function//
-        return next();
-      } else {
-        //if value is not admin, sends 401 error//
-        const err = new Error('You are not authenticated.');
-        err.status = 401;
-        return next(err);
-      }
+      return next();
   }
 }
+
 
 //Calls auth function (above)//
 app.use(auth);
