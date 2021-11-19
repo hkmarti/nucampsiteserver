@@ -1,6 +1,7 @@
 //Imports Express and Express Router//
 const express = require('express');
 const partnerRouter = express.Router();
+const authenticate = require('../authenticate');
 
 //Import Model//
 const Partner = require('../models/partner');
@@ -17,7 +18,7 @@ partnerRouter.route('/')
     })
     .catch (err => next(err));
 })
-.post((req, res, next) => {
+.post(authenticate.verifyUser, (req, res, next) => {
     //Creates a new Partner document and saves it to mongoDB server.//
     Partner.create(req.body)
     .then(partner => {
@@ -28,12 +29,12 @@ partnerRouter.route('/')
     })
     .catch (err => next(err));
 })
-.put((req, res) => {
+.put(authenticate.verifyUser, (req, res) => {
     //PUT operation is not supported//
     res.statusCode = 403;
     res.end('PUT operation not supported on /partners');
 })
-.delete((req, res, next) => {
+.delete(authenticate.verifyUser, (req, res, next) => {
     //Deletes ALL Partners//
     Partner.deleteMany()
     .then (response => {
@@ -60,12 +61,12 @@ partnerRouter.route('/:partnerId')
     })
     .catch(err => next(err));
 })
-.post((req, res) => {
+.post(authenticate.verifyUser, (req, res) => {
     //POST NOT SUPPORTED//
     res.statusCode = 403;
     res.end(`POST operation is not supported on /partners/${req.params.partnerId}`);
 })
-.put((req, res, next) => {
+.put(authenticate.verifyUser, (req, res, next) => {
     //Updates partner by id//
     Partner.findByIdAndUpdate(req.params.partnerId,
         //Updates by using info from request body//
@@ -80,7 +81,7 @@ partnerRouter.route('/:partnerId')
     })  
     .catch(err => next(err));
 })
-.delete((req, res, next) =>{
+.delete(authenticate.verifyUser, (req, res, next) =>{
     //Deletes specific partner by id//
     Partner.findByIdAndDelete(req.params.partnerId)
     .then(response => {

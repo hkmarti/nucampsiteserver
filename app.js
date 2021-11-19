@@ -1,12 +1,9 @@
 var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
-var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-const session = require('express-session');
-const FileStore = require('session-file-store')(session);
 const passport = require('passport');
-const authenticate = require('./authenticate');
+const config = require('./config');
 
 //IMPORTING ROUTERS//
 var indexRouter = require('./routes/index');
@@ -19,7 +16,7 @@ const partnerRouter = require('./routes/partnerRouter');
 const mongoose = require('mongoose');
 
 //Sets up url and connection for mongoDB server//
-const url = 'mongodb://localhost:27017/nucampsite';
+const url = config.mongoUrl;
 const connect = mongoose.connect(url, {
     useCreateIndex: true,
     useFindAndModify: false,
@@ -45,45 +42,12 @@ app.use(express.urlencoded({ extended: false }));
 //Gives cookieParser a secret key//
 // app.use(cookieParser('12345-67890-09876-54321'));
 
-//Using Session instead of cookieParser//
-app.use(session({
-  name: 'session-id',
-  //Secret key//
-  secret: '12345-67890-09876-54321',
-  //'saveUninitialized: false' --> When a new session is created and no updates are made to it, then at the end of the request it won't get saved. Avoids making empty sessions and no cookie will be sent to the client.//
-  saveUninitialized: false,
-  //'resave: false' --> Once the session has been created and updated and saved, it will continue to be resaved whenever a request is made for that session even if that request didn't make any updates. Helps keep session marked as active so it doesn't get deleted while the user is still making requests.//
-  resave: false,
-  //Creates a new FileStore as an object that saves session information to the server's hard disk instead of the running application's memory//
-  store: new FileStore()
-}));
-
 //Two middleware functions provided by Passport to check incoming requests to see if there's an existing session for that client. If so, the session data for that client is loaded into the request as rec.user//
 app.use(passport.initialize());
-app.use(passport.session());
 
 //Client has acesses to log in before authentication//
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
-
-
-//Set up authentication before accessing server//
-function auth(req, res, next) {
-  console.log(req.user);
-
-  if (!req.user) {
-    //If no user, then no session. Return error//
-      const err = new Error('You are not authenticated!');                    
-      err.status = 401;
-      return next(err);
-  } else {
-      return next();
-  }
-}
-
-
-//Calls auth function (above)//
-app.use(auth);
 
 app.use(express.static(path.join(__dirname, 'public')));
 

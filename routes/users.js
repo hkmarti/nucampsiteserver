@@ -2,6 +2,7 @@
 const express = require('express');
 const User = require('../models/user');
 const passport = require('passport');
+const authenticate = require('../authenticate');
 
 const router = express.Router();
 
@@ -37,9 +38,11 @@ router.post('/signup', (req,res) =>{
 //Adding passport.authenticate in argument enables passport authentication for this route.//
 //If there's no issue with passport.authenticate, then it'll move to the next middleware (req, res)//
 router.post('/login', passport.authenticate('local'), (req, res) => {
-  res.statusCode = 200;
-  res.setHeader('Content-Type', 'application/json');
-  res.json({success: true, status: 'You are successfully logged in.'});
+    //Issues a token to the user using user id//
+    const token = authenticate.getToken({_id: req.user._id});
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'application/json');
+    res.json({success: true, token: token, status: 'You are successfully logged in.'});
 });
 
 router.get('/logout', (req, res, next) => {
