@@ -11,26 +11,44 @@ router.get('/', function(req, res, next) {
   res.send('respond with a resource');
 });
 
-router.post('/signup', (req,res) =>{
-  //Registers new user and password.//
+router.post('/signup', (req, res) => {
+  //Registers new user and password//
   User.register(
-    new User({username: req.body.username}),
-    req.body.password,
-    err => {
-      if (err) {
-        //If there's an error, return 500 error//
-        res.statusCode = 500;
-        res.setHeader('Content-Type', 'application/json');
-        res.json({err: err});
-      } else {
-        //If there's no error, create new user//
-        passport.authenticate('local')(req, res, () => {
-          res.statusCode = 200;
-          res.setHeader('Content-type', 'application/json');
-          res.json({success: true, status: 'Registration Successful'});
-        });
+      new User({username: req.body.username}),
+      req.body.password,
+      (err, user) => {
+          if (err) {
+              //if there's an error, send error 500//
+              res.statusCode = 500;
+              res.setHeader('Content-Type', 'application/json');
+              res.json({err: err});
+          } else {
+              if (req.body.firstname) {
+                //sets user's first name in firstname field//
+                  user.firstname = req.body.firstname;
+              }
+              if (req.body.lastname) {
+                //sets user's last name in lastname field//
+                  user.lastname = req.body.lastname;
+              }
+              //Saves info the database//
+              user.save(err => {
+                  if (err) {
+                    //if there's an error, send 500 error//
+                      res.statusCode = 500;
+                      res.setHeader('Content-Type', 'application/json');
+                      res.json({err: err});
+                      return;
+                  }
+                  //if there's no error, create new user//
+                  passport.authenticate('local')(req, res, () => {
+                      res.statusCode = 200;
+                      res.setHeader('Content-Type', 'application/json');
+                      res.json({success: true, status: 'Registration Successful!'});
+                  });
+              });
+          }
       }
-    }
   );
 });
 

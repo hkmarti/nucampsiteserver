@@ -10,6 +10,8 @@ campsiteRouter.route('/')
 .get((req, res, next) => {
     //Find() will query the database for all the documents that were created using the Campsite model.//
     Campsite.find()
+    //Populates author field of the comments sub-document by finding the user document that matches the objectId// 
+    .populate('comments.author')
     .then(campsites =>{
         //If successful, then run code below//
         res.statusCode = 200;
@@ -54,6 +56,7 @@ campsiteRouter.route('/:campsiteId')
 .get((req, res, next) => {
     //Finds campsite by the id set by the client in req.params.campsiteId//
     Campsite.findById(req.params.campsiteId)
+    .populate('comments.author')
     .then (campsite => {
         res.statusCode = 200;
         res.setHeader('Content-Type', 'application/json');
@@ -94,6 +97,7 @@ campsiteRouter.route('/:campsiteId/comments')
 .get((req, res, next) => {
     //Find() documents by using the campsiteId//
     Campsite.findById(req.params.campsiteId)
+    .populate('comments.author')
     .then(campsite =>{
         if (campsite){
             //if campsite is found, return the following...//
@@ -115,6 +119,8 @@ campsiteRouter.route('/:campsiteId/comments')
     Campsite.findById(req.params.campsiteId)
     .then(campsite =>{
         if (campsite){
+            //Automatically adds the userId to the author field//
+            req.body.author = req.user._id;
             //Push new comment from request body into the comments array//
             campsite.comments.push(req.body);
             //Save changes to mongoDB database//
@@ -168,6 +174,7 @@ campsiteRouter.route('/:campsiteId/comments')
 campsiteRouter.route('/:campsiteId/comments/:commentId')
 .get((req, res, next) => {
     Campsite.findById(req.params.campsiteId)
+    .populate('comments.author')
     .then(campsite => {
         //if campsite and comment ids are found, return specific comment//
         if (campsite && campsite.comments.id(req.params.commentId)) {
