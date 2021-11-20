@@ -18,7 +18,7 @@ partnerRouter.route('/')
     })
     .catch (err => next(err));
 })
-.post(authenticate.verifyUser, (req, res, next) => {
+.post(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     //Creates a new Partner document and saves it to mongoDB server.//
     Partner.create(req.body)
     .then(partner => {
@@ -34,7 +34,7 @@ partnerRouter.route('/')
     res.statusCode = 403;
     res.end('PUT operation not supported on /partners');
 })
-.delete(authenticate.verifyUser, (req, res, next) => {
+.delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     //Deletes ALL Partners//
     Partner.deleteMany()
     .then (response => {
@@ -66,7 +66,7 @@ partnerRouter.route('/:partnerId')
     res.statusCode = 403;
     res.end(`POST operation is not supported on /partners/${req.params.partnerId}`);
 })
-.put(authenticate.verifyUser, (req, res, next) => {
+.put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     //Updates partner by id//
     Partner.findByIdAndUpdate(req.params.partnerId,
         //Updates by using info from request body//
@@ -81,7 +81,7 @@ partnerRouter.route('/:partnerId')
     })  
     .catch(err => next(err));
 })
-.delete(authenticate.verifyUser, (req, res, next) =>{
+.delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) =>{
     //Deletes specific partner by id//
     Partner.findByIdAndDelete(req.params.partnerId)
     .then(response => {
