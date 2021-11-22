@@ -3,11 +3,12 @@ const express = require('express');
 const User = require('../models/user');
 const passport = require('passport');
 const authenticate = require('../authenticate');
+const cors = require('./cors');
 
 const router = express.Router();
 
 //If authenticated as user AND admin, then find all users//
-router.get('/', authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
+router.get('/', cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
         User.find()
         .then(users =>{
             //If successful, then return code 200 and user//
@@ -18,7 +19,7 @@ router.get('/', authenticate.verifyUser, authenticate.verifyAdmin, (req, res, ne
         .catch(err => next(err));
 });
 
-router.post('/signup', (req, res) => {
+router.post('/signup', cors.corsWithOptions, (req, res) => {
   //Registers new user and password//
   User.register(
       new User({username: req.body.username}),
@@ -62,7 +63,7 @@ router.post('/signup', (req, res) => {
 
 //Adding passport.authenticate in argument enables passport authentication for this route.//
 //If there's no issue with passport.authenticate, then it'll move to the next middleware (req, res)//
-router.post('/login', passport.authenticate('local'), (req, res) => {
+router.post('/login', cors.corsWithOptions, passport.authenticate('local'), (req, res) => {
     //Issues a token to the user using user id//
     const token = authenticate.getToken({_id: req.user._id});
     res.statusCode = 200;
@@ -70,7 +71,7 @@ router.post('/login', passport.authenticate('local'), (req, res) => {
     res.json({success: true, token: token, status: 'You are successfully logged in.'});
 });
 
-router.get('/logout', (req, res, next) => {
+router.get('/logout', cors.corsWithOptions, (req, res, next) => {
     //When user logs out, destory session, clear cookie, and redirect to homepage.//
     if (req.session){
         req.session.destroy();
